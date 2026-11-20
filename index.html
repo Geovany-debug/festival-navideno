@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diseño — Festival Navideño de Cuento</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --midnight-blue: #081029;
+      --royal-blue: #101e4a;
+      --wine-deep: #2a0610;
+      --wine-velvet: #540d20;
+      --gold-light: #fae39c;
+      --gold-main: #d4af37;
+      --gold-shadow: #8c6514;
+      --cream: #fdf7ea;
+      --cream-soft: rgba(253, 247, 234, 0.88);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      background-color: var(--midnight-blue);
+      color: var(--cream);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 28px 14px 52px;
+    }
+
+    /* Capa 0: Fondo del castillo + atmósfera azul invernal + nieve */
+    .backdrop-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 25%, #162863 0%, #091230 58%, #040818 100%);
+    }
+
+    .castle-photo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      opacity: 0.92;
+    }
+
+    .castle-fallback-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.58;
+    }
+
+    .winter-atmosphere-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 22%, rgba(250, 227, 156, 0.14) 0%, transparent 56%),
+        linear-gradient(180deg, rgba(8, 16, 41, 0.34) 0%, rgba(12, 23, 58, 0.46) 52%, rgba(6, 11, 28, 0.78) 100%);
+      transition: background 0.6s ease;
+    }
+
+    body.is-playing .winter-atmosphere-overlay {
+      background:
+        radial-gradient(circle at 50% 24%, rgba(250, 227, 156, 0.24) 0%, transparent 60%),
+        linear-gradient(180deg, rgba(8, 16, 41, 0.26) 0%, rgba(16, 26, 66, 0.4) 52%, rgba(6, 11, 28, 0.74) 100%);
+    }
+
+    #snowCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Personajes laterales: Bella a la izquierda y Bestia a la derecha, centrados y cerca de la tarjeta */
+    .side-character-flank {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 6;
+      pointer-events: none;
+      will-change: transform, filter;
+      transition: filter 0.45s ease, opacity 0.45s ease;
+    }
+
+    .belle-flank {
+      left: clamp(24px, 11vw, 195px);
+      width: clamp(210px, 23vw, 315px);
+      filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.8));
+    }
+
+    .beast-flank {
+      right: clamp(24px, 11vw, 195px);
+      width: clamp(215px, 23.5vw, 320px);
+      filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.8));
+    }
+
+    .side-character-flank img {
+      width: 100%;
+      height: auto;
+      display: block;
+      mix-blend-mode: screen;
+      user-select: none;
+    }
+
+    .belle-motion {
+      transform-origin: 50% 50%;
+      animation: belleIdleSway 4.2s ease-in-out infinite;
+    }
+
+    .beast-motion {
+      transform-origin: 50% 50%;
+      animation: beastIdleSway 4.4s ease-in-out infinite;
+    }
+
+    body.is-playing .belle-flank {
+      z-index: 15;
+      filter:
+        drop-shadow(0 0 24px rgba(250, 227, 156, 0.42))
+        drop-shadow(0 18px 32px rgba(0, 0, 0, 0.84));
+      animation: belleStageWaltz 14s ease-in-out infinite;
+    }
+
+    body.is-playing .beast-flank {
+      z-index: 15;
+      filter:
+        drop-shadow(0 0 24px rgba(250, 227, 156, 0.42))
+        drop-shadow(0 18px 32px rgba(0, 0, 0, 0.84));
+      animation: beastStageWaltz 14s ease-in-out infinite;
+    }
+
+    body.is-playing .belle-motion {
+      animation: belleDanceStep 3.2s ease-in-out infinite;
+    }
+
+    body.is-playing .beast-motion {
+      animation: beastDanceStep 3.2s ease-in-out infinite;
+    }
+
+    /* Capa 10: Tarjeta visual estilo cuento clásico */
+    .storybook-card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 430px;
+      border-radius: 28px;
+      padding: 12px;
+      background: linear-gradient(
+        170deg,
+        rgba(10, 19, 48, 0.7) 0%,
+        rgba(28, 12, 28, 0.74) 52%,
+        rgba(10, 18, 44, 0.8) 100%
+      );
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1.5px solid rgba(250, 227, 156, 0.7);
+      box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.78),
+        inset 0 0 36px rgba(212, 175, 55, 0.16);
+      transition: border-color 0.45s ease, box-shadow 0.45s ease;
+    }
+
+    body.is-playing .storybook-card {
+      border-color: rgba(255, 243, 190, 0.88);
+      box-shadow:
+        0 26px 64px rgba(0, 0, 0, 0.82),
+        0 0 28px rgba(250, 227, 156, 0.16),
+        inset 0 0 42px rgba(212, 175, 55, 0.22);
+    }
+
+    .storybook-inner {
+      position: relative;
+      border-radius: 20px;
+      border: 1px solid rgba(250, 227, 156, 0.42);
+      padding: 28px 18px 24px;
+    }
+
+    /* Ornamentos barrocos en las 4 esquinas */
+    .corner-ornament {
+      position: absolute;
+      width: 34px;
+      height: 34px;
+      color: var(--gold-light);
+      opacity: 0.88;
+      pointer-events: none;
+    }
+    .corner-tl { top: 8px; left: 8px; }
+    .corner-tr { top: 8px; right: 8px; transform: rotate(90deg); }
+    .corner-bl { bottom: 8px; left: 8px; transform: rotate(-90deg); }
+    .corner-br { bottom: 8px; right: 8px; transform: rotate(180deg); }
+
+    /* Encabezado */
+    .header-block {
+      text-align: center;
+    }
+
+    .epigraph {
+      font-style: italic;
+      font-size: clamp(1.25rem, 3.6vw, 1.44rem);
+      color: var(--gold-light);
+      letter-spacing: 0.03em;
+    }
+
+    .story-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 8px auto 6px;
+      color: rgba(250, 227, 156, 0.88);
+      font-size: 0.72rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    .story-divider .line {
+      width: 28px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-main), transparent);
+    }
+
+    .main-title {
+      font-family: 'Cinzel Decorative', 'Playfair Display', Georgia, serif;
+      font-weight: 900;
+      font-size: clamp(1.42rem, 4.4vw, 1.72rem);
+      line-height: 1.24;
+      letter-spacing: 0.05em;
+      color: var(--gold-light);
+      text-shadow: 0 2px 14px rgba(212, 175, 55, 0.35);
+    }
+
+    .subtitle {
+      font-style: italic;
+      font-size: clamp(1.04rem, 3vw, 1.15rem);
+      color: var(--cream-soft);
+      margin-top: 4px;
+    }
+
+    /* Escena central animada */
+    .castle-stage {
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 4px;
+      margin: 18px 0 16px;
+    }
+
+    .side-character {
+      width: 88px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 6px;
+    }
+
+    .side-character svg {
+      width: 100%;
+      height: auto;
+      filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.68));
+      transition: filter 0.4s ease;
+    }
+
+    .candle-image-wrap {
+      position: relative;
+      width: 92px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: 50% 90%;
+      animation: candleImageSway 3.1s ease-in-out infinite;
+    }
+
+    body.is-playing .candle-image-wrap {
+      animation: candleImageWaltz 1.8s ease-in-out infinite;
+    }
+
+    .candle-character-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.72));
+      transition: filter 0.4s ease;
+      user-select: none;
+    }
+
+    .clock-image-wrap {
+      position: relative;
+      width: 92px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: 50% 92%;
+      animation: clockImageSway 2.4s ease-in-out infinite;
+    }
+
+    body.is-playing .clock-image-wrap {
+      animation: clockImageWaltz 1.45s ease-in-out infinite;
+    }
+
+    .clock-character-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.72));
+      transition: filter 0.4s ease;
+      user-select: none;
+    }
+
+    body.is-playing .side-character svg,
+    body.is-playing .candle-character-img,
+    body.is-playing .clock-character-img,
+    body.is-playing .tea-duo-img {
+      filter: drop-shadow(0 0 14px rgba(250, 227, 156, 0.36)) drop-shadow(0 8px 14px rgba(0, 0, 0, 0.75));
+    }
+
+    /* Capa de animación de flamas alineada a las puntas de las velas de Lumière */
+    .candle-flames-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    .lumiere-flame {
+      transform-box: fill-box;
+      transform-origin: 50% 100%;
+      animation: flameFlickerReal 1.7s ease-in-out infinite;
+    }
+
+    .lumiere-flame--left {
+      animation-delay: 0s;
+    }
+
+    .lumiere-flame--center {
+      animation-duration: 1.45s;
+      animation-delay: 0.35s;
+    }
+
+    .lumiere-flame--right {
+      animation-duration: 1.85s;
+      animation-delay: 0.7s;
+    }
+
+    body.is-playing .lumiere-flame {
+      animation-duration: 1.15s;
+    }
+
+    .lumiere-glow {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: flameGlowPulse 2.1s ease-in-out infinite;
+    }
+
+    body.is-playing .lumiere-glow {
+      animation-duration: 1.3s;
+    }
+
+    .rose-center-wrap {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .rose-aura {
+      position: absolute;
+      width: 184px;
+      height: 184px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(250, 227, 156, 0.36) 0%, rgba(190, 18, 60, 0.28) 55%, transparent 75%);
+      animation: auraPulse 3.8s ease-in-out infinite;
+      pointer-events: none;
+      transition: transform 0.5s ease, filter 0.5s ease;
+    }
+
+    .rose-trigger-btn.active .rose-aura {
+      background: radial-gradient(circle, rgba(255, 243, 190, 0.68) 0%, rgba(225, 29, 72, 0.44) 55%, transparent 76%);
+      animation: auraEnchanted 1.8s ease-in-out infinite;
+    }
+
+    /* Rosa interactiva como botón principal */
+    .rose-trigger-btn {
+      position: relative;
+      z-index: 6;
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .rose-trigger-btn:hover .rose-visual,
+    .rose-trigger-btn:focus-visible .rose-visual {
+      transform: translateY(-4px) scale(1.03);
+      filter: drop-shadow(0 0 22px rgba(250, 227, 156, 0.65)) drop-shadow(0 14px 22px rgba(0, 0, 0, 0.78));
+    }
+
+    .rose-visual {
+      position: relative;
+      z-index: 5;
+      width: 182px;
+      height: 214px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: roseFloat 4.6s ease-in-out infinite;
+      filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.72));
+      transition: transform 0.3s ease, filter 0.35s ease;
+    }
+
+    .rose-trigger-btn.active .rose-visual {
+      animation: roseEnchantedDance 2.6s ease-in-out infinite;
+      filter: drop-shadow(0 0 26px rgba(250, 227, 156, 0.85)) drop-shadow(0 14px 24px rgba(0, 0, 0, 0.8));
+    }
+
+    .rose-crown-motion {
+      transform-box: fill-box;
+      transform-origin: 50% 82%;
+      animation: roseHeadBreathe 3.8s ease-in-out infinite;
+    }
+
+    .rose-trigger-btn.active .rose-crown-motion {
+      animation: roseHeadWaltz 2.2s ease-in-out infinite;
+    }
+
+    .fallen-petal-motion {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: fallenPetalShiver 4.4s ease-in-out infinite;
+    }
+
+    .rose-trigger-btn.active .fallen-petal-motion {
+      animation: fallenPetalWaltz 2.4s ease-in-out infinite;
+    }
+
+    .rose-magic-ring {
+      position: absolute;
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      border: 2px solid rgba(250, 227, 156, 0.9);
+      box-shadow: 0 0 18px rgba(250, 227, 156, 0.8);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .rose-trigger-btn.burst .rose-magic-ring {
+      animation: magicRingBurst 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .rose-spark {
+      opacity: 0.25;
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: roseSparkIdle 3.2s ease-in-out infinite;
+    }
+
+    .rose-trigger-btn.active .rose-spark {
+      animation: roseSparkFloat 2.2s ease-in-out infinite;
+    }
+
+    .rose-hint-pill {
+      margin-top: 2px;
+      padding: 3px 11px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-style: italic;
+      color: var(--gold-light);
+      background: rgba(42, 6, 16, 0.74);
+      border: 1px solid rgba(250, 227, 156, 0.44);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .rose-trigger-btn.active .rose-hint-pill {
+      background: rgba(127, 9, 35, 0.86);
+      border-color: #fff3be;
+    }
+
+    /* Franja narrativa con medallón ornamental */
+    .narrative-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 16px;
+      background: linear-gradient(155deg, rgba(42, 6, 16, 0.7) 0%, rgba(16, 30, 74, 0.8) 100%);
+      border: 1px solid rgba(250, 227, 156, 0.38);
+      box-shadow: inset 0 0 18px rgba(250, 227, 156, 0.08);
+      margin-bottom: 14px;
+    }
+
+    .medallion-crest {
+      position: relative;
+      width: 62px;
+      height: 62px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      border: 1.5px solid rgba(250, 227, 156, 0.72);
+      background: radial-gradient(circle, rgba(250, 227, 156, 0.22) 0%, rgba(42, 6, 16, 0.88) 100%);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 14px rgba(212, 175, 55, 0.22);
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .medallion-crest.active {
+      border-color: #fff3be;
+      box-shadow: 0 0 24px rgba(250, 227, 156, 0.7);
+    }
+
+    .narrative-text {
+      font-size: clamp(1rem, 3vw, 1.12rem);
+      line-height: 1.4;
+      text-align: center;
+      color: var(--cream);
+      flex: 1;
+    }
+
+    .tea-duo {
+      position: relative;
+      width: 68px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: 50% 88%;
+      animation: teaImageSway 3.4s ease-in-out infinite;
+    }
+
+    body.is-playing .tea-duo {
+      animation: teaImageWaltz 1.8s ease-in-out infinite;
+    }
+
+    .tea-duo-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.72));
+      transition: filter 0.35s ease;
+      user-select: none;
+    }
+
+    .tea-fx-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    /* Marcos visuales de composición (sin botones) */
+    .design-frame {
+      border-radius: 16px;
+      padding: 13px 14px;
+      background: linear-gradient(160deg, rgba(16, 30, 74, 0.74) 0%, rgba(10, 18, 44, 0.86) 100%);
+      border: 1px solid rgba(250, 227, 156, 0.36);
+      box-shadow: inset 0 0 14px rgba(250, 227, 156, 0.06);
+      margin-bottom: 12px;
+    }
+
+    .frame-label {
+      font-family: 'Cinzel Decorative', Georgia, serif;
+      font-size: 0.74rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .frame-placeholder {
+      border-radius: 12px;
+      border: 1px dashed rgba(250, 227, 156, 0.34);
+      background: rgba(42, 6, 16, 0.45);
+      padding: 12px;
+      text-align: center;
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--cream-soft);
+    }
+
+    /* Despedida */
+    .card-footer {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(250, 227, 156, 0.25);
+      text-align: center;
+    }
+
+    .footer-quote {
+      font-style: italic;
+      font-size: 1.15rem;
+      color: var(--gold-light);
+    }
+
+    /* Keyframes de animaciones */
+    @keyframes belleIdleSway {
+      0%, 100% { transform: translateY(0) rotate(-1deg); }
+      50% { transform: translateY(-5px) rotate(1.1deg); }
+    }
+
+    @keyframes beastIdleSway {
+      0%, 100% { transform: translateY(0) rotate(1deg); }
+      50% { transform: translateY(-5px) rotate(-1.1deg); }
+    }
+
+    @keyframes belleStageWaltz {
+      0%, 100% { transform: translate3d(0vw, calc(-50% + 0vh), 0) scale(1); }
+      25% { transform: translate3d(4.5vw, calc(-50% - 7vh), 0) scale(0.97); }
+      50% { transform: translate3d(2vw, calc(-50% - 14vh), 0) scale(0.93); }
+      75% { transform: translate3d(5.5vw, calc(-50% - 5vh), 0) scale(0.99); }
+    }
+
+    @keyframes beastStageWaltz {
+      0%, 100% { transform: translate3d(0vw, calc(-50% + 0vh), 0) scale(1); }
+      25% { transform: translate3d(-4.5vw, calc(-50% - 7vh), 0) scale(0.97); }
+      50% { transform: translate3d(-2vw, calc(-50% - 14vh), 0) scale(0.93); }
+      75% { transform: translate3d(-5.5vw, calc(-50% - 5vh), 0) scale(0.99); }
+    }
+
+    @keyframes belleDanceStep {
+      0%, 100% { transform: translateY(0) rotate(-2deg); }
+      25% { transform: translateY(-7px) rotate(1.8deg); }
+      50% { transform: translateY(-2px) rotate(2.4deg); }
+      75% { transform: translateY(-7px) rotate(-1.8deg); }
+    }
+
+    @keyframes beastDanceStep {
+      0%, 100% { transform: translateY(0) rotate(2deg); }
+      25% { transform: translateY(-7px) rotate(-1.8deg); }
+      50% { transform: translateY(-2px) rotate(-2.4deg); }
+      75% { transform: translateY(-7px) rotate(1.8deg); }
+    }
+
+    @keyframes roseFloat {
+      0%, 100% { transform: translateY(0) rotate(-0.7deg); }
+      50% { transform: translateY(-5px) rotate(0.7deg); }
+    }
+
+    @keyframes roseEnchantedDance {
+      0%, 100% { transform: translateY(-2px) rotate(-2deg) scale(1.03); }
+      25% { transform: translateY(-7px) rotate(1.4deg) scale(1.05); }
+      50% { transform: translateY(-3px) rotate(2deg) scale(1.03); }
+      75% { transform: translateY(-7px) rotate(-1.4deg) scale(1.05); }
+    }
+
+    @keyframes roseHeadBreathe {
+      0%, 100% { transform: rotate(-1.5deg) scale(0.99); }
+      50% { transform: rotate(1.8deg) scale(1.02); }
+    }
+
+    @keyframes roseHeadWaltz {
+      0%, 100% { transform: rotate(-3deg) scale(1.02); }
+      50% { transform: rotate(3.2deg) scale(1.05); }
+    }
+
+    @keyframes fallenPetalShiver {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-1.5px) rotate(1.5deg); }
+    }
+
+    @keyframes fallenPetalWaltz {
+      0%, 100% { transform: translateY(0) rotate(-2deg); }
+      50% { transform: translateY(-2.5px) rotate(2.2deg); }
+    }
+
+    @keyframes magicRingBurst {
+      0% { transform: scale(0.55); opacity: 0.95; }
+      100% { transform: scale(1.85); opacity: 0; }
+    }
+
+    @keyframes roseSparkIdle {
+      0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.25; }
+      50% { transform: translateY(-5px) scale(1.1); opacity: 0.75; }
+    }
+
+    @keyframes roseSparkFloat {
+      0% { transform: translateY(8px) scale(0.6); opacity: 0; }
+      40% { opacity: 1; }
+      100% { transform: translateY(-28px) scale(1.25); opacity: 0; }
+    }
+
+    @keyframes auraPulse {
+      0%, 100% { opacity: 0.55; transform: scale(0.96); }
+      50% { opacity: 0.95; transform: scale(1.05); }
+    }
+
+    @keyframes auraEnchanted {
+      0%, 100% { opacity: 0.78; transform: scale(1.02); }
+      50% { opacity: 1; transform: scale(1.18); }
+    }
+
+    @keyframes candleImageSway {
+      0%, 100% { transform: rotate(-2.2deg) translateY(0); }
+      50% { transform: rotate(2.4deg) translateY(-3px); }
+    }
+
+    @keyframes candleImageWaltz {
+      0%, 100% { transform: rotate(-3.5deg) translateY(0) scale(1.02); }
+      50% { transform: rotate(3.5deg) translateY(-4px) scale(1.04); }
+    }
+
+    @keyframes flameFlickerReal {
+      0%, 100% { transform: scaleX(1) scaleY(1) rotate(-2deg); opacity: 0.9; }
+      25% { transform: scaleX(0.9) scaleY(1.16) rotate(3deg); opacity: 1; }
+      50% { transform: scaleX(1.08) scaleY(0.92) rotate(-3deg); opacity: 0.84; }
+      75% { transform: scaleX(0.94) scaleY(1.12) rotate(2deg); opacity: 0.98; }
+    }
+
+    @keyframes flameGlowPulse {
+      0%, 100% { transform: scale(0.92); opacity: 0.52; }
+      50% { transform: scale(1.14); opacity: 0.88; }
+    }
+
+    @keyframes clockImageSway {
+      0%, 100% { transform: rotate(3.2deg) translateY(0); }
+      50% { transform: rotate(-3.2deg) translateY(-2px); }
+    }
+
+    @keyframes clockImageWaltz {
+      0%, 100% { transform: rotate(4.5deg) translateY(0); }
+      25% { transform: rotate(0deg) translateY(-3.5px); }
+      50% { transform: rotate(-4.5deg) translateY(0); }
+      75% { transform: rotate(0deg) translateY(-3.5px); }
+    }
+
+    @keyframes teaImageSway {
+      0%, 100% { transform: rotate(-1.8deg) translateY(0); }
+      50% { transform: rotate(2deg) translateY(-2.5px); }
+    }
+
+    @keyframes teaImageWaltz {
+      0%, 100% { transform: rotate(-3deg) translateY(0) scale(1.03); }
+      50% { transform: rotate(3deg) translateY(-3.5px) scale(1.05); }
+    }
+
+    @keyframes steamRise {
+      0% { transform: translateY(4px) scale(0.85); opacity: 0; }
+      45% { opacity: 0.78; }
+      100% { transform: translateY(-14px) scale(1.2); opacity: 0; }
+    }
+
+    @keyframes teaSparkFloat {
+      0%, 100% { transform: translateY(0) scale(0.75); opacity: 0.25; }
+      50% { transform: translateY(-6px) scale(1.25); opacity: 0.95; }
+    }
+
+    @keyframes emblemSpin {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.08); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    .steam-anim {
+      animation: steamRise 2.8s ease-out infinite;
+    }
+
+    body.is-playing .steam-anim {
+      animation-duration: 1.9s;
+    }
+
+    .tea-spark {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: teaSparkFloat 2.6s ease-in-out infinite;
+    }
+
+    body.is-playing .tea-spark {
+      animation-duration: 1.4s;
+    }
+
+    .emblem-anim {
+      transform-origin: center;
+      animation: emblemSpin 9s linear infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (max-width: 1120px) {
+      body:not(.is-playing) .side-character-flank {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      body.is-playing .belle-flank {
+        opacity: 0.92;
+        width: clamp(145px, 30vw, 200px);
+        left: 2vw;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      body.is-playing .beast-flank {
+        opacity: 0.92;
+        width: clamp(145px, 30vw, 205px);
+        right: 2vw;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+    }
+
+    @media (max-width: 380px) {
+      .side-character { width: 72px; }
+      .candle-image-wrap,
+      .clock-image-wrap { width: 76px; }
+      .rose-visual { width: 156px; height: 184px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ARCHIVO DE AUDIO DE LA VELADA -->
+  <audio id="localSong" src="La Bella y la Bestia Canción 'Bella y Bestia Son' HD.mp3" loop preload="auto"></audio>
+
+  <!-- CAPA 0: FONDO DEL CASTILLO + ATMÓSFERA AZUL INVERNAL + NIEVE -->
+  <div class="backdrop-layer" aria-hidden="true">
+    <svg class="castle-fallback-svg" viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice" fill="none">
+      <defs>
+        <radialGradient id="stainedGlassGlow" cx="50%" cy="32%" r="42%">
+          <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.55"/>
+          <stop offset="55%" stop-color="#1e3a8a" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#091230" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="stairRed" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#7f1d1d"/>
+          <stop offset="100%" stop-color="#3b0712"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="1200" fill="url(#stainedGlassGlow)"/>
+      <path d="M290 540 V260 C290 170 510 170 510 260 V540" stroke="#d4af37" stroke-width="4" fill="rgba(30, 64, 175, 0.22)"/>
+      <path d="M130 560 V310 C130 235 260 235 260 310 V560" stroke="#d4af37" stroke-width="3" fill="rgba(30, 58, 138, 0.18)"/>
+      <path d="M540 560 V310 C540 235 670 235 670 310 V560" stroke="#d4af37" stroke-width="3" fill="rgba(30, 58, 138, 0.18)"/>
+      <path d="M80 860 Q220 790 270 560 H335 Q295 810 165 890 Z" fill="url(#stairRed)" stroke="#d4af37" stroke-width="2.5"/>
+      <path d="M720 860 Q580 790 530 560 H465 Q505 810 635 890 Z" fill="url(#stairRed)" stroke="#d4af37" stroke-width="2.5"/>
+      <path d="M80 825 Q210 755 265 535" stroke="#fae39c" stroke-width="3" fill="none"/>
+      <path d="M720 825 Q590 755 535 535" stroke="#fae39c" stroke-width="3" fill="none"/>
+    </svg>
+
+    <img
+      src="https://i.pinimg.com/736x/74/f3/18/74f3180574e663599e7d00944d597df3.jpg"
+      alt=""
+      onerror="this.style.display='none'"
+      class="castle-photo"
+    />
+
+    <div class="winter-atmosphere-overlay"></div>
+    <canvas id="snowCanvas"></canvas>
+  </div>
+
+  <!-- BELLA AL COSTADO IZQUIERDO (CENTRADA VERTICALMENTE Y CERCA DEL CUADRO) -->
+  <aside class="side-character-flank belle-flank" aria-hidden="true">
+    <div class="belle-motion">
+      <img
+        src="https://i.pinimg.com/originals/3c/2e/50/3c2e50a6892ac6df8df281dea9bda243.png"
+        alt=""
+      />
+    </div>
+  </aside>
+
+  <!-- BESTIA AL COSTADO DERECHO (CENTRADA VERTICALMENTE Y CERCA DEL CUADRO) -->
+  <aside class="side-character-flank beast-flank" aria-hidden="true">
+    <div class="beast-motion">
+      <img
+        src="https://i.pinimg.com/originals/12/25/12/1225120b07a77f2181d1cc65f5172835.png"
+        alt=""
+      />
+    </div>
+  </aside>
+
+  <!-- CAPA 10: TARJETA VISUAL DE CUENTO CLÁSICO ELEGANTE -->
+  <main class="storybook-card">
+    <div class="storybook-inner">
+
+      <!-- Esquinas barrocas doradas -->
+      <svg class="corner-ornament corner-tl" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <path d="M4 26V10C4 6.686 6.686 4 10 4H26" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M9 22C9 14.5 14.5 9 22 9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <circle cx="11" cy="11" r="2.2" fill="currentColor"/>
+      </svg>
+      <svg class="corner-ornament corner-tr" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <path d="M4 26V10C4 6.686 6.686 4 10 4H26" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M9 22C9 14.5 14.5 9 22 9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <circle cx="11" cy="11" r="2.2" fill="currentColor"/>
+      </svg>
+      <svg class="corner-ornament corner-bl" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <path d="M4 26V10C4 6.686 6.686 4 10 4H26" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M9 22C9 14.5 14.5 9 22 9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <circle cx="11" cy="11" r="2.2" fill="currentColor"/>
+      </svg>
+      <svg class="corner-ornament corner-br" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <path d="M4 26V10C4 6.686 6.686 4 10 4H26" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M9 22C9 14.5 14.5 9 22 9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <circle cx="11" cy="11" r="2.2" fill="currentColor"/>
+      </svg>
+
+      <!-- ENCABEZADO DE CUENTO -->
+      <header class="header-block">
+        <p class="epigraph">«Nuestro huésped sea usted...»</p>
+        <div class="story-divider">
+          <span class="line"></span>
+          <span>Cuento de Invierno</span>
+          <span class="line"></span>
+        </div>
+        <h1 class="main-title">LA BELLA Y LA BESTIA</h1>
+        <p class="subtitle">Una velada navideña en el castillo encantado</p>
+      </header>
+
+      <!-- ESCENA CENTRAL CON VELA, ROSA DISPARADORA Y RELOJ ENCANTADO -->
+      <section class="castle-stage" aria-label="Escena encantada del castillo">
+        <div class="side-character">
+          <div class="candle-image-wrap">
+            <img
+              src="https://static.wikia.nocookie.net/disneyypixar/images/8/84/Lumi%C3%A8re_KHX.png/revision/latest/scale-to-width-down/250?cb=20231012064734&path-prefix=es"
+              alt="Lumière, candelabro y vela encantada"
+              class="candle-character-img"
+            />
+            <svg class="candle-flames-overlay" viewBox="0 0 250 320" aria-hidden="true">
+              <defs>
+                <radialGradient id="lumiereFlameGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#fef08a" stop-opacity="0.82"/>
+                  <stop offset="55%" stop-color="#f59e0b" stop-opacity="0.25"/>
+                  <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+                </radialGradient>
+                <linearGradient id="lumiereFlameGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+                  <stop offset="0%" stop-color="#ffffff"/>
+                  <stop offset="42%" stop-color="#fde047"/>
+                  <stop offset="82%" stop-color="#f97316"/>
+                  <stop offset="100%" stop-color="#dc2626"/>
+                </linearGradient>
+              </defs>
+
+              <circle class="lumiere-glow" cx="56" cy="54" r="20" fill="url(#lumiereFlameGlow)"/>
+              <circle class="lumiere-glow" cx="126" cy="30" r="24" fill="url(#lumiereFlameGlow)"/>
+              <circle class="lumiere-glow" cx="196" cy="56" r="20" fill="url(#lumiereFlameGlow)"/>
+
+              <path
+                class="lumiere-flame lumiere-flame--left"
+                d="M56 36 C63 45 63 56 56 61 C49 56 49 45 56 36 Z"
+                fill="url(#lumiereFlameGrad)"
+              />
+              <path
+                class="lumiere-flame lumiere-flame--center"
+                d="M126 10 C134 21 134 33 126 39 C118 33 118 21 126 10 Z"
+                fill="url(#lumiereFlameGrad)"
+              />
+              <path
+                class="lumiere-flame lumiere-flame--right"
+                d="M196 38 C203 47 203 58 196 63 C189 58 189 47 196 38 Z"
+                fill="url(#lumiereFlameGrad)"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <div class="rose-center-wrap">
+          <button
+            type="button"
+            id="roseTriggerBtn"
+            class="rose-trigger-btn"
+            aria-pressed="false"
+            aria-label="Tocar la rosa encantada para iniciar o pausar la canción"
+            title="Toca la rosa encantada"
+          >
+            <span class="rose-aura"></span>
+            <span class="rose-magic-ring"></span>
+
+            <div class="rose-visual">
+              <svg viewBox="0 0 240 280" width="100%" height="100%" role="img" aria-label="Rosa roja realista con pétalos caídos bajo cúpula de cristal">
+                <defs>
+                  <radialGradient id="domeFloorGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#ff5a79" stop-opacity="0.34"/>
+                    <stop offset="65%" stop-color="#fae39c" stop-opacity="0.12"/>
+                    <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+                  </radialGradient>
+
+                  <linearGradient id="woodBaseSide" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#1b0704"/>
+                    <stop offset="18%" stop-color="#4e1b10"/>
+                    <stop offset="48%" stop-color="#873722"/>
+                    <stop offset="76%" stop-color="#3f140b"/>
+                    <stop offset="100%" stop-color="#160503"/>
+                  </linearGradient>
+                  <linearGradient id="woodTopDeck" x1="50%" y1="0%" x2="50%" y2="100%">
+                    <stop offset="0%" stop-color="#5a2114"/>
+                    <stop offset="60%" stop-color="#2c0d07"/>
+                    <stop offset="100%" stop-color="#180603"/>
+                  </linearGradient>
+
+                  <linearGradient id="stemGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#153219"/>
+                    <stop offset="40%" stop-color="#3c7d45"/>
+                    <stop offset="75%" stop-color="#224c28"/>
+                    <stop offset="100%" stop-color="#102613"/>
+                  </linearGradient>
+                  <linearGradient id="leafLeftGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#559c5e"/>
+                    <stop offset="50%" stop-color="#295e31"/>
+                    <stop offset="100%" stop-color="#133018"/>
+                  </linearGradient>
+                  <linearGradient id="leafRightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#559c5e"/>
+                    <stop offset="50%" stop-color="#295e31"/>
+                    <stop offset="100%" stop-color="#133018"/>
+                  </linearGradient>
+
+                  <radialGradient id="rosePetalDeep" cx="35%" cy="22%" r="80%">
+                    <stop offset="0%" stop-color="#ff7c94"/>
+                    <stop offset="32%" stop-color="#dc193c"/>
+                    <stop offset="72%" stop-color="#8d0921"/>
+                    <stop offset="100%" stop-color="#3c020c"/>
+                  </radialGradient>
+                  <radialGradient id="rosePetalMid" cx="40%" cy="20%" r="78%">
+                    <stop offset="0%" stop-color="#ff9ab0"/>
+                    <stop offset="28%" stop-color="#eb2548"/>
+                    <stop offset="70%" stop-color="#9b0c26"/>
+                    <stop offset="100%" stop-color="#480310"/>
+                  </radialGradient>
+                  <radialGradient id="rosePetalCore" cx="50%" cy="25%" r="72%">
+                    <stop offset="0%" stop-color="#ff6b88"/>
+                    <stop offset="45%" stop-color="#b50d2b"/>
+                    <stop offset="85%" stop-color="#610516"/>
+                    <stop offset="100%" stop-color="#2e0109"/>
+                  </radialGradient>
+
+                  <radialGradient id="fallenPetalGrad" cx="35%" cy="25%" r="80%">
+                    <stop offset="0%" stop-color="#ff859d"/>
+                    <stop offset="42%" stop-color="#d41638"/>
+                    <stop offset="85%" stop-color="#7c071c"/>
+                    <stop offset="100%" stop-color="#3b020c"/>
+                  </radialGradient>
+
+                  <linearGradient id="domeGlassFill" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.34"/>
+                    <stop offset="12%" stop-color="#e0f2fe" stop-opacity="0.11"/>
+                    <stop offset="46%" stop-color="#fffbeb" stop-opacity="0.03"/>
+                    <stop offset="78%" stop-color="#bae6fd" stop-opacity="0.08"/>
+                    <stop offset="92%" stop-color="#ffffff" stop-opacity="0.22"/>
+                    <stop offset="100%" stop-color="#ffffff" stop-opacity="0.38"/>
+                  </linearGradient>
+                  <linearGradient id="domeRimSheen" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.72"/>
+                    <stop offset="35%" stop-color="#fde68a" stop-opacity="0.25"/>
+                    <stop offset="70%" stop-color="#ffffff" stop-opacity="0.2"/>
+                    <stop offset="100%" stop-color="#ffffff" stop-opacity="0.68"/>
+                  </linearGradient>
+                  <linearGradient id="goldKnob" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#fff8d6"/>
+                    <stop offset="40%" stop-color="#e3b83e"/>
+                    <stop offset="78%" stop-color="#9e7114"/>
+                    <stop offset="100%" stop-color="#5c3e05"/>
+                  </linearGradient>
+                </defs>
+
+                <ellipse cx="120" cy="264" rx="86" ry="12" fill="rgba(0, 0, 0, 0.58)"/>
+
+                <g>
+                  <path
+                    d="M36 250 C36 240 62 235 120 235 C178 235 204 240 204 250 L200 259 C200 267 166 271 120 271 C74 271 40 267 40 259 Z"
+                    fill="url(#woodBaseSide)"
+                    stroke="#b88824"
+                    stroke-width="1.4"
+                  />
+                  <path
+                    d="M44 238 C44 231 72 227 120 227 C168 227 196 231 196 238 L193 244 C193 250 162 253 120 253 C78 253 47 250 47 244 Z"
+                    fill="#3a130b"
+                    stroke="#fae39c"
+                    stroke-width="1.2"
+                  />
+                  <ellipse cx="120" cy="236" rx="74" ry="10.5" fill="url(#woodTopDeck)" stroke="#d4af37" stroke-width="1.1"/>
+                  <ellipse cx="120" cy="236" rx="64" ry="7.5" fill="url(#domeFloorGlow)"/>
+                </g>
+
+                <g class="fallen-petal-motion">
+                  <path
+                    d="M72 238 C60 233 52 240 61 245 C70 249 82 245 72 238 Z"
+                    fill="url(#fallenPetalGrad)"
+                    stroke="#590413"
+                    stroke-width="0.7"
+                  />
+                  <path d="M60 241 Q68 242 73 240" stroke="#ffb3c1" stroke-width="0.65" fill="none" opacity="0.65"/>
+
+                  <path
+                    d="M158 239 C170 234 178 241 169 246 C160 250 148 246 158 239 Z"
+                    fill="url(#fallenPetalGrad)"
+                    stroke="#590413"
+                    stroke-width="0.7"
+                  />
+                  <path d="M170 242 Q162 243 157 241" stroke="#ffb3c1" stroke-width="0.65" fill="none" opacity="0.65"/>
+
+                  <path
+                    d="M134 242 C142 239 148 244 142 247 C136 250 128 246 134 242 Z"
+                    fill="url(#fallenPetalGrad)"
+                    stroke="#590413"
+                    stroke-width="0.6"
+                  />
+
+                  <path
+                    d="M89 233 C81 229 76 233 83 236 C89 238 95 235 89 233 Z"
+                    fill="#9f0c27"
+                    opacity="0.92"
+                  />
+                </g>
+
+                <g>
+                  <path
+                    d="M120 236 C116 202 117 166 120 124"
+                    stroke="url(#stemGrad)"
+                    stroke-width="5.2"
+                    stroke-linecap="round"
+                    fill="none"
+                  />
+                  <path
+                    d="M119 234 C116 202 117 166 119.5 126"
+                    stroke="#75bd7e"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                    fill="none"
+                    opacity="0.6"
+                  />
+
+                  <path d="M117 194 L111 191 L117 188 Z" fill="#2d6636"/>
+                  <path d="M120 162 L126 159 L120 156 Z" fill="#2d6636"/>
+
+                  <path
+                    d="M117 182 C95 164 72 168 67 184 C82 194 103 191 117 184 Z"
+                    fill="url(#leafLeftGrad)"
+                    stroke="#112b16"
+                    stroke-width="0.9"
+                  />
+                  <path d="M116 183 Q92 177 69 183" stroke="#9be0a3" stroke-width="0.95" fill="none" opacity="0.7"/>
+                  <path d="M98 178 L93 172 M86 180 L81 175 M95 182 L90 187" stroke="#85cf8e" stroke-width="0.7" fill="none" opacity="0.55"/>
+
+                  <path
+                    d="M120 164 C142 146 165 150 170 166 C155 176 134 173 120 166 Z"
+                    fill="url(#leafRightGrad)"
+                    stroke="#112b16"
+                    stroke-width="0.9"
+                  />
+                  <path d="M121 165 Q145 159 168 165" stroke="#9be0a3" stroke-width="0.95" fill="none" opacity="0.7"/>
+                  <path d="M139 160 L144 154 M151 162 L156 157 M142 164 L147 169" stroke="#85cf8e" stroke-width="0.7" fill="none" opacity="0.55"/>
+                </g>
+
+                <g class="rose-crown-motion">
+                  <path d="M120 125 C106 128 96 122 92 114 C103 116 112 119 120 125 Z" fill="#275e30" stroke="#112b16" stroke-width="0.7"/>
+                  <path d="M120 125 C134 128 144 122 148 114 C137 116 128 119 120 125 Z" fill="#275e30" stroke="#112b16" stroke-width="0.7"/>
+                  <path d="M120 125 C115 132 112 136 110 139 C116 135 119 131 120 125 Z" fill="#1e4a25"/>
+
+                  <path
+                    d="M116 123 C88 126 76 104 92 88 C102 79 116 96 116 123 Z"
+                    fill="url(#rosePetalDeep)"
+                    stroke="#4a020f"
+                    stroke-width="0.7"
+                  />
+                  <path
+                    d="M124 123 C152 126 164 104 148 88 C138 79 124 96 124 123 Z"
+                    fill="url(#rosePetalDeep)"
+                    stroke="#4a020f"
+                    stroke-width="0.7"
+                  />
+                  <path
+                    d="M94 118 C108 131 132 131 146 118 C138 102 102 102 94 118 Z"
+                    fill="url(#rosePetalDeep)"
+                    stroke="#4a020f"
+                    stroke-width="0.65"
+                  />
+
+                  <path
+                    d="M102 114 C82 104 84 76 106 72 C116 70 116 96 102 114 Z"
+                    fill="url(#rosePetalMid)"
+                    stroke="#5c0314"
+                    stroke-width="0.7"
+                  />
+                  <path
+                    d="M138 114 C158 104 156 76 134 72 C124 70 124 96 138 114 Z"
+                    fill="url(#rosePetalMid)"
+                    stroke="#5c0314"
+                    stroke-width="0.7"
+                  />
+                  <path
+                    d="M98 92 C104 72 136 72 142 92 C132 104 108 104 98 92 Z"
+                    fill="url(#rosePetalMid)"
+                    stroke="#5c0314"
+                    stroke-width="0.65"
+                  />
+
+                  <path
+                    d="M106 82 C104 64 136 64 134 82 C132 95 108 95 106 82 Z"
+                    fill="url(#rosePetalCore)"
+                    stroke="#3b010b"
+                    stroke-width="0.7"
+                  />
+                  <path
+                    d="M111 80 C110 69 130 69 129 80 C128 88 112 88 111 80 Z"
+                    fill="#c91233"
+                  />
+                  <path
+                    d="M115 79 C115 73 125 73 125 79 C124 83 116 83 115 79 Z"
+                    fill="#ff6b88"
+                  />
+                  <path
+                    d="M117 77 C119 74 123 76 121 79"
+                    stroke="#ffe5ec"
+                    stroke-width="1.05"
+                    stroke-linecap="round"
+                    fill="none"
+                  />
+
+                  <path d="M95 102 Q102 92 107 88" stroke="#ffadc0" stroke-width="0.75" fill="none" opacity="0.5"/>
+                  <path d="M145 102 Q138 92 133 88" stroke="#ffadc0" stroke-width="0.75" fill="none" opacity="0.5"/>
+                  <ellipse cx="97" cy="106" rx="1.6" ry="2.3" fill="rgba(255, 255, 255, 0.78)"/>
+                </g>
+
+                <circle class="rose-spark" cx="84" cy="118" r="2.6" fill="#fff6cc" style="animation-delay: 0s;"/>
+                <circle class="rose-spark" cx="156" cy="112" r="2.4" fill="#fae39c" style="animation-delay: 0.6s;"/>
+                <circle class="rose-spark" cx="94" cy="154" r="2.2" fill="#fff6cc" style="animation-delay: 1.2s;"/>
+                <circle class="rose-spark" cx="146" cy="150" r="2.6" fill="#fae39c" style="animation-delay: 1.8s;"/>
+                <circle class="rose-spark" cx="120" cy="54" r="2.9" fill="#ffffff" style="animation-delay: 0.9s;"/>
+
+                <path
+                  d="M54 236 V104 C54 56 82 28 120 28 C158 28 186 56 186 104 V236"
+                  fill="url(#domeGlassFill)"
+                  stroke="url(#domeRimSheen)"
+                  stroke-width="2.1"
+                />
+                <path
+                  d="M66 220 V106 C66 70 84 46 108 38"
+                  stroke="rgba(255, 255, 255, 0.56)"
+                  stroke-width="3.2"
+                  stroke-linecap="round"
+                  fill="none"
+                />
+                <path
+                  d="M74 198 V116"
+                  stroke="rgba(255, 255, 255, 0.25)"
+                  stroke-width="1.3"
+                  stroke-linecap="round"
+                  fill="none"
+                />
+                <path
+                  d="M174 206 V112 C174 82 164 60 148 46"
+                  stroke="rgba(255, 248, 214, 0.28)"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  fill="none"
+                />
+
+                <g>
+                  <ellipse cx="120" cy="28" rx="11" ry="3" fill="url(#goldKnob)"/>
+                  <path d="M114 26 C114 20 126 20 126 26 Z" fill="url(#goldKnob)"/>
+                  <circle cx="120" cy="16" r="6.8" fill="url(#goldKnob)" stroke="#634206" stroke-width="0.75"/>
+                  <ellipse cx="117.5" cy="13.8" rx="2" ry="1.3" fill="#fffdf2" opacity="0.85"/>
+                </g>
+              </svg>
+            </div>
+
+            <span id="roseHintPill" class="rose-hint-pill">Toca la rosa encantada</span>
+          </button>
+        </div>
+
+        <div class="side-character">
+          <div class="clock-image-wrap">
+            <img
+              src="https://static.wikia.nocookie.net/disneyypixar/images/a/a1/Cogsworth_KHX.png/revision/latest?cb=20231012065504&path-prefix=es"
+              alt="Din Don / Cogsworth, reloj encantado"
+              class="clock-character-img"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- FRANJA NARRATIVA -->
+      <section class="narrative-box" aria-label="Narrativa del cuento">
+        <div id="medallionCrest" class="medallion-crest" aria-hidden="true">
+          <svg viewBox="0 0 100 100" class="emblem-anim" width="100%" height="100%">
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#fae39c" stroke-width="1.3" stroke-dasharray="4 3" opacity="0.75"/>
+            <path d="M50 22 L56.5 43.5 L78 50 L56.5 56.5 L50 78 L43.5 56.5 L22 50 L43.5 43.5 Z" fill="#fae39c" opacity="0.9"/>
+            <circle cx="50" cy="50" r="5" fill="#fffdf7"/>
+          </svg>
+        </div>
+
+        <p class="narrative-text">
+          Entre luces cálidas, nieve suave y el eco de la Navidad, las puertas del gran salón aguardan.
+        </p>
+
+        <div class="tea-duo">
+          <img
+            src="https://cdn.sweezy-cursors.com/cursor_packs/36edfd40-5138-4573-bc1a-142b2a6f1fd3/beauty-and-the-beast-chip-mrs-potts--poster--3ff378.png"
+            alt="Chip y la Señora Potts"
+            class="tea-duo-img"
+          />
+          <svg class="tea-fx-overlay" viewBox="0 0 100 100" aria-hidden="true">
+            <path class="steam-anim" d="M32 34 Q27 25 33 17" fill="none" stroke="#fef3c7" stroke-width="2" stroke-linecap="round"/>
+            <path class="steam-anim" style="animation-delay: 0.9s;" d="M46 30 Q42 22 47 14" fill="none" stroke="#fae39c" stroke-width="1.7" stroke-linecap="round"/>
+            <path class="steam-anim" style="animation-delay: 1.6s;" d="M74 44 Q70 36 75 29" fill="none" stroke="#fef3c7" stroke-width="1.6" stroke-linecap="round"/>
+            <circle class="tea-spark" cx="22" cy="46" r="2.2" fill="#fff6cc" style="animation-delay: 0s;"/>
+            <circle class="tea-spark" cx="84" cy="36" r="2.4" fill="#fae39c" style="animation-delay: 0.8s;"/>
+            <circle class="tea-spark" cx="56" cy="22" r="1.9" fill="#ffffff" style="animation-delay: 1.4s;"/>
+          </svg>
+        </div>
+      </section>
+
+      <!-- MARCOS VISUALES DE COMPOSICIÓN (SIN BOTONES) -->
+      <div class="design-frame">
+        <p class="frame-label">Espacio de Datos del Festival</p>
+        <div class="frame-placeholder">Aquí colocaremos fecha, hora, lugar</div>
+      </div>
+
+      <div class="design-frame">
+        <p class="frame-label">Espacio de Interacción y Acciones</p>
+        <div class="frame-placeholder">Aquí integraremos los botones y funciones (ubicación,confirmacion,programa)</div>
+      </div>
+
+      <!-- DESPEDIDA -->
+      <footer class="card-footer">
+        <p class="footer-quote">Que la magia de esta Navidad ilumine el camino.</p>
+      </footer>
+    </div>
+  </main>
+
+  <script>
+    /* Nieve con distintos planos de profundidad y destellos dorados sobre el fondo */
+    (function () {
+      const canvas = document.getElementById('snowCanvas');
+      const ctx = canvas.getContext('2d');
+      let w = 0, h = 0;
+      const flakes = [];
+
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        w = window.innerWidth;
+        h = window.innerHeight;
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      for (let i = 0; i < 64; i++) {
+        const gold = i % 4 === 0;
+        const depth = i % 3;
+        const radiusBase = depth === 0 ? 0.9 : depth === 1 ? 1.6 : 2.5;
+        const speedBase = depth === 0 ? 0.22 : depth === 1 ? 0.45 : 0.78;
+        flakes.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: radiusBase + Math.random() * 0.9,
+          vy: speedBase + Math.random() * 0.25,
+          phase: Math.random() * Math.PI * 2,
+          alpha: depth === 0 ? 0.42 : depth === 1 ? 0.68 : 0.88,
+          gold
+        });
+      }
+
+      function loop() {
+        ctx.clearRect(0, 0, w, h);
+        for (const f of flakes) {
+          f.y += f.vy;
+          f.phase += 0.015;
+          f.x += Math.sin(f.phase) * 0.48;
+          if (f.y > h + 8) { f.y = -8; f.x = Math.random() * w; }
+
+          ctx.beginPath();
+          ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+          ctx.fillStyle = f.gold
+            ? `rgba(250, 227, 156, ${f.alpha})`
+            : `rgba(224, 242, 254, ${f.alpha})`;
+          ctx.fill();
+        }
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    })();
+
+    /* Rosa encantada: reproduce o pausa la canción y activa la danza de Bella y Bestia */
+    (function () {
+      const roseBtn = document.getElementById('roseTriggerBtn');
+      const roseHint = document.getElementById('roseHintPill');
+      const crest = document.getElementById('medallionCrest');
+      const audioEl = document.getElementById('localSong');
+      if (!roseBtn || !audioEl) return;
+
+      function syncUIState(playing, customHint) {
+        document.body.classList.toggle('is-playing', playing);
+        roseBtn.classList.toggle('active', playing);
+        roseBtn.setAttribute('aria-pressed', String(playing));
+        if (crest) crest.classList.toggle('active', playing);
+
+        if (roseHint) {
+          if (customHint) {
+            roseHint.textContent = customHint;
+          } else {
+            roseHint.textContent = playing ? 'Canción activa · Toca para pausar' : 'Toca la rosa encantada';
+          }
+        }
+      }
+
+      audioEl.addEventListener('play', () => {
+        syncUIState(true);
+      });
+
+      audioEl.addEventListener('pause', () => {
+        syncUIState(false);
+      });
+
+      audioEl.addEventListener('error', () => {
+        syncUIState(false, 'Toca la rosa encantada');
+      });
+
+      roseBtn.addEventListener('click', async () => {
+        roseBtn.classList.remove('burst');
+        void roseBtn.offsetWidth;
+        roseBtn.classList.add('burst');
+
+        if (!audioEl.paused) {
+          audioEl.pause();
+          return;
+        }
+
+        try {
+          audioEl.volume = 0.85;
+          await audioEl.play();
+        } catch (err) {
+          syncUIState(false, 'Toca la rosa encantada');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
